@@ -16,14 +16,15 @@ configuration_blueprint = Blueprint(name=NAME, import_name=__name__, url_prefix=
 @configuration_blueprint.route("watchlist", methods=["GET", "POST"])
 def watchlist():
     '''
-    watchlist route add and retrieve Shares & ETFs
+    watchlist route add and retrieve Stocks & ETFs
     '''
     try:
         if request.method.upper() == "GET":
-            result = forwarder.get_watchlist()
+            user_data = request.args
+            result = forwarder.get_watchlist(user_data=user_data)
             return make_response(jsonify({'status_code': 200, 'status': None,
                                       'data': result,
-                                      'isShowToaster': True, 'message': ''}), 200)
+                                      'isShowToaster': True, 'message': None}), 200)
         if request.method.upper() == "POST":
             user_data = request.get_json(force=True)
             status = forwarder.add_watchlist(user_data=user_data.get("user_data"))

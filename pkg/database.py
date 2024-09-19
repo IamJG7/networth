@@ -24,12 +24,13 @@ class Database:
         '''
         host = self.config.get("host")
         port = self.config.get("port")
+        db = self.config.get("db")
         encoding = self.config.get("encoding")
         decode_response = self.config.get("decode_response")
         username = os.getenv("REDIS_USERNAME")
         password = os.getenv("REDIS_PASSWORD")
         try:
-            redis_client = Redis(host=host, port=port, encoding=encoding, decode_responses=decode_response)
+            redis_client = Redis(host=host, port=port, db=db, encoding=encoding, decode_responses=decode_response)
         except RedisError as exc:
             self.logger.error(f"Failed to connect to Redis server: {exc}")
             raise RedisError(f"Failed to connect to Redis server: {exc}")
