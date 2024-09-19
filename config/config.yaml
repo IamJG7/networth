@@ -1,0 +1,62 @@
+application:
+  environment: "DEVELOPMENT"
+  directory: ""
+  debug: true
+  service_auto_restart: false
+  process:
+    duplex: true
+    queue_size: 7
+logging:
+  stream_handler: true
+  file_handler: false
+  file_handler_mode: "w"
+  file_rotation_size: 26214400  # 25MB
+  file_backup_count: 10
+  file_handler_encoding: "utf-8"
+  syslog_handler: false
+  syslog_host: ""
+  syslog_port: ""
+  syslog_socket: "UDP"
+http:
+  ssl_verification: false
+  timeout: 5
+  retries: 3
+  backoff_factor: 0.1
+  retry_forcelist: [502, 503, 504]
+  retry_allowed_methods: ["POST", "GET"]
+  http_proxy: ""
+  https_proxy: ""
+  max_response_body_download_size: 2097152   # 2MB
+  download_chunk_size: 1024    # 1KB
+webserver:
+  port: 9000
+  debug: true
+  environment: "DEVELOPMENT"   # PRODUCTION, DEVELOPMENT
+smtp:
+  debug: false
+  host: "smtp.gmail.com"
+  port: 587   # 587 TLS / 465 SSL
+  tls: true
+  ssl_protocol: "TLS" # TLS, TLSv1, TLSv1.1, TLSv1.2, SSLv2, SSLv3
+  timeout: 5
+  sender: "jglab.automation@gmail.com"
+  recipients: ["jglab.developer@gmail.com", "jgsecurities@gmail.com"]
+  body_type: html
+database:
+  redis:
+    host: 192.168.0.11
+    port: 6379
+    encoding: 'utf-8'
+    decode_response: true
+messaging:
+  kafka:
+    broker: "192.168.0.11"
+    port: 9092
+    zookeeper:
+    topics: ["test_topic"]
+    consumer:
+      group: test
+      auto_commit: false
+      offset_reset: latest  # latest, earliest, 
+      min_commit_count: 3
+      asynchronous_commit: false
