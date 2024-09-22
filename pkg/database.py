@@ -18,13 +18,14 @@ class Database:
         self.config = config
         self.logger = logger
 
-    def connect(self) -> Redis:
+    def connect(self, db: int = None) -> Redis:
         '''
         connect
         '''
         host = self.config.get("host")
         port = self.config.get("port")
-        db = self.config.get("db")
+        if db is None:
+            db = self.config.get("db")
         encoding = self.config.get("encoding")
         decode_response = self.config.get("decode_response")
         username = os.getenv("REDIS_USERNAME")

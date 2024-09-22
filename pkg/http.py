@@ -15,11 +15,17 @@ SSL_CERT_FILE_DIR = os.path.join("src","lib", "http")
 DOWNLOAD_DIR = os.path.join("artifacts","downloads")
 
 class HTTP:
+    '''
+    HTTP
+    '''
 
     def __init__(self, config: Config) -> None:
         self.config = config
 
     def make_request(self, method: str, url: str, data: dict = None, session: Session= None, stream: bool= False) -> dict:
+        '''
+        make_request
+        '''
         timeout = self.config.get('timeout')
         try:
             if session is None:
@@ -40,6 +46,9 @@ class HTTP:
                 response.close()
       
     def get_session(self, authentication: bool= False, header: dict= None, proxy: dict= None) -> Session:
+        '''
+        get_session
+        '''
         try:
             session = Session()
             if self.config.get("ssl_verification"):
@@ -110,7 +119,7 @@ class HTTP:
             if "application/json" in response_header.get("Content-Type"):
                 content = json.loads(response.text)
             else:
-                content = self.__download_file(response=response)
+                self.__download_file(response=response)
         except Exception as err:
             raise Exception(f"Failed to make a response: {err}")
         else:

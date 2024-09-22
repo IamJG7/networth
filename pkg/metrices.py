@@ -4,7 +4,7 @@ prometheus module defines application metrices for the application
 
 from prometheus_client import Counter, Enum, Gauge, Histogram, Info, Summary
 
-class Metrices:
+class Prometheus:
 
     def __init__(self) -> None:
         pass

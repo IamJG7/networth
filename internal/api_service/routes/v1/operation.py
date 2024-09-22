@@ -3,7 +3,7 @@ operations blueprint module defines operations API routes
 '''
 
 import os
-from flask import Blueprint, abort, jsonify, make_response, request
+from flask import Blueprint, abort, jsonify, make_response, redirect, request
 
 from internal.api_service.routes import logger
 from internal.api_service.routes import forwarder
@@ -50,14 +50,25 @@ def statistics():
                                           'message': None}), 200)
         if request.method.upper() == "POST":
             user_data = request.get_json(force=True)
-            status = forwarder.add_statistic(user_data=user_data.get("user_data"))
-            if status == SUCCESS:
-                return make_response(jsonify({'status_code': 201,
-                                              'status': status,
-                                              'data': None,
-                                              'isShowToaster': True,
-                                              'message': 'Successfully created a transactionID'}), 201)
+            result = forwarder.add_statistic(user_data=user_data.get("user_data"))
+            return make_response(jsonify({'status_code': 201,
+                                            'status': SUCCESS,
+                                            'data': result,
+                                            'isShowToaster': True,
+                                            'message': 'Successfully created a transactionID'}), 201)
         abort(405)
     except Exception as err:
         logger.error(f"Failed to perform {request.method} operation for {statistics.__name__}: {err}")
+        abort(500, description=err.args[0])
+
+@operation_blueprint.route("dashboard/networth", methods=["GET"])
+def dashboard():
+    '''
+    dashboard
+    '''
+    try:
+        dashboard_url = ""
+        return redirect(dashboard_url)
+    except Exception as err:
+        logger.error(f"Failed to redirect to Grafana dashbord: {err}")
         abort(500, description=err.args[0])
