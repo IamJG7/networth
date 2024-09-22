@@ -32,7 +32,7 @@ def generate_password():
             abort(405)
     except Exception as err:
         logger.error(f"Failed to perform {request.method} operation for {generate_password.__name__}: {err}")
-        abort(500)
+        abort(500, description=err.args[0])
 
 @operation_blueprint.route("statistics", methods=["GET", "POST"])
 def statistics():
@@ -51,7 +51,7 @@ def statistics():
         if request.method.upper() == "POST":
             user_data = request.get_json(force=True)
             status = forwarder.add_statistic(user_data=user_data.get("user_data"))
-            if status == "success":
+            if status == SUCCESS:
                 return make_response(jsonify({'status_code': 201,
                                               'status': status,
                                               'data': None,
@@ -60,4 +60,4 @@ def statistics():
         abort(405)
     except Exception as err:
         logger.error(f"Failed to perform {request.method} operation for {statistics.__name__}: {err}")
-        abort(500)
+        abort(500, description=err.args[0])

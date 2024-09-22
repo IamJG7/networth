@@ -7,21 +7,9 @@ from flask import Blueprint, jsonify, make_response
 from internal.api_service.routes import logger
 
 NAME="error"
-SUCCESS = "success"
 FAILURE = "failure"
 
-
 error_blueprint = Blueprint(name=NAME, import_name=__name__)
-
-# @error_blueprint.app_errorhandler(204)
-# def error_204(err):
-#     '''
-#     HTTP 405 Error
-#     '''
-#     logger.error(err)
-#     return make_response(jsonify({'status_code': 204, 'status': SUCCESS,
-#                                   'data': None,
-#                                   'isShowToaster': True, 'message': err.description}), 204)
 
 @error_blueprint.app_errorhandler(405)
 def error_405(err):
@@ -29,7 +17,7 @@ def error_405(err):
     HTTP 405 Error
     '''
     logger.error(err)
-    return make_response(jsonify({'status_code': 405, 'status': 'failure',
+    return make_response(jsonify({'status_code': 405, 'status': FAILURE,
                                   'data': None,
                                   'isShowToaster': True, 'message': err.description}), 405)
 
@@ -38,15 +26,15 @@ def error_500(err):
     '''
     HTTP 500 Error
     '''
-    return make_response(jsonify({'status_code': 405, 'status': 'failure',
+    return make_response(jsonify({'status_code': err.description[0], 'status': FAILURE,
                                 'data': None,
-                                'isShowToaster': True, 'message': err.description}), 500)
+                                'isShowToaster': True, 'message': err.description[1]}), 500)
 
 @error_blueprint.app_errorhandler(501)
 def error_501(err):
     '''
     HTTP 501 Error
     '''
-    return make_response(jsonify({'status_code': 501, 'status': 'failure',
+    return make_response(jsonify({'status_code': 501, 'status': FAILURE,
                                 'data': None,
                                 'isShowToaster': True, 'message': err.description}), 501)

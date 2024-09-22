@@ -25,7 +25,7 @@ class APIService:
         
     def start(self) -> None:
         '''
-        start method initiates the WebServer
+        start method initiates the WebAPIService
         '''
         envrionment = self.config.get("webserver").get("environment").upper()
         debug = self.config.get("webserver").get("debug")

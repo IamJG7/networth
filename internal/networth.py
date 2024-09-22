@@ -1,6 +1,7 @@
 
 from config.config import Config
 from internal.api_service.service import APIService
+from internal.core_analyzer_service.service import CoreService
 from pkg.logger import Logger
 
 class Application:
@@ -17,8 +18,11 @@ class Application:
         '''
         self.logger.info("Starting the Networth Analyzer Application")
 
-        service = APIService(config=self.config, logger=self.logger)
-        service.start()
+        api_service = APIService(config=self.config, logger=self.logger)
+        core_service = CoreService(config=self.config, logger=self.logger)
+        ingestion_service = APIService(config=self.config, logger=self.logger)
+
+        core_service.start()
     
     def stop(self) -> None:
         '''

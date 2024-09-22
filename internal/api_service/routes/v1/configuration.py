@@ -35,4 +35,4 @@ def watchlist():
         abort(405)
     except Exception as err:
         logger.error(f"Failed to perform {request.method} operation for {watchlist.__name__}: {err}")
-        abort(500)
+        abort(500, description=err.args[0])
