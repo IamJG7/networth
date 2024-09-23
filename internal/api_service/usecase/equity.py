@@ -80,8 +80,6 @@ class Equity:
         message["request"] = "statistics"
         try:
             self.logger.debug(f"Publising request to the ch1 with transaction ID: {message['transaction_id']}")
-            print(json.dumps(message))
-            print(">"*1000)
             _ = self.database.publish(channel=CHANNEL, message=json.dumps(message))
             self.database.select(index=TRANSACTION_DB)
             self.database.hset(name=message["transaction_id"], key="status", value="pending")

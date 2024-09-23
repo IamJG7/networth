@@ -1,13 +1,9 @@
 '''
-
+forwarder
 '''
 
-from flask import json
-
 from config.config import Config
-
 from internal.core_analyzer_service.usecase.scanner import EquityScanner
-from pkg.database import Database
 from pkg.logger import logging
 
 class Forwarder:
@@ -18,11 +14,13 @@ class Forwarder:
         self.config = config
         self.logger = logger
         self.scanner = EquityScanner(config=config, logger=logger)
-        self.database = Database(config=config.get("database").get("redis"), logger=logger).connect(db=0)
 
-    def add_statistics(self, user_data: json) -> str:
+    def add_statistics(self, user_data: dict, transaction_id: str) -> str:
         '''
         add_statistic
         '''
-        _ = self.scanner.scan_stock_statistics(user_data=user_data)
+        try:
+            self.scanner.scan_stock_statistics(user_data=user_data, tx_id=transaction_id)
+        except Exception as exc:
+            self.logger.error(f"Failed to add statistical data for transactionID: {transaction_id}: {exc}")
         

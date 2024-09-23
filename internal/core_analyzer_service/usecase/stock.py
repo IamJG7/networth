@@ -38,17 +38,17 @@ class Stock:
         try:
             response = self.__make_http_requests(url=url)
         except Exception as exc:
-            self.logger.error(f"Failed to get price for- {ticker}: {exc}")
+            raise Exception(f"Failed to get price for- {ticker}: {exc}") from exc
         else:
-            actual_response = response.get("content")
+            data = response.get("content")
             result = {}
-            result["open"] = round(actual_response.get("open"), 2)
-            result["close"] = round(actual_response.get("close"), 2)
-            result["high"] = round(actual_response.get("high"), 2)
-            result["low"] = round(actual_response.get("low"), 2)
-            result["volume"] = round(actual_response.get("volume"), 2)
-            result["after_hours"] = round(actual_response.get("afterHours"), 2)
-            result["pre_market"] = round(actual_response.get("preMarket"), 2)
+            result["open"] = round(data.get("open"), 2)
+            result["close"] = round(data.get("close"), 2)
+            result["high"] = round(data.get("high"), 2)
+            result["low"] = round(data.get("low"), 2)
+            result["volume"] = round(data.get("volume"), 2)
+            result["after_hours"] = round(data.get("afterHours"), 2)
+            result["pre_market"] = round(data.get("preMarket"), 2)
             return result
         
     def get_sma(self, ticker: str, date: datetime.date, sma: int) -> dict:
@@ -59,7 +59,7 @@ class Stock:
         try:
             response = self.__make_http_requests(url=url)
         except Exception as exc:
-            self.logger.error(f"Failed to get Simple Moving Average for- {ticker}: {exc}")
+            raise Exception(f"Failed to get Simple Moving Average for- {ticker}: {exc}") from exc
         else:
             result = {}
             result[f"sma{sma}"] = round(response.get("content").get("results").get("values")[0].get("value"), 2)
@@ -73,7 +73,7 @@ class Stock:
         try:
             response = self.__make_http_requests(url=url)
         except Exception as exc:
-            self.logger.error(f"Failed to get Simple Moving Average for- {ticker}: {exc}")
+            raise Exception(f"Failed to get Exponential Moving Average for- {ticker}: {exc}") from exc
         else:
             result = {}
             result[f"ema{ema}"] = round(response.get("content").get("results").get("values")[0].get("value"), 2)
@@ -86,8 +86,8 @@ class Stock:
         url = self.polygon.get_rsi(ticker=ticker, date=date)
         try:
             response = self.__make_http_requests(url=url)
-        except Exception as err:
-            self.logger.error(f"Failed to get RSI for- {ticker}: {err}")
+        except Exception as exc:
+            raise Exception(f"Failed to get RSI for- {ticker}: {exc}") from exc
         else:
             actual_response = response.get("content").get("results")
             result = {}

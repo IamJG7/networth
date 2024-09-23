@@ -2,6 +2,7 @@
 from config.config import Config
 from internal.api_service.service import APIService
 from internal.core_analyzer_service.service import CoreService
+from internal.data_ingestion_service.service import IngestionService
 from pkg.logger import Logger
 
 class Application:
@@ -20,9 +21,12 @@ class Application:
 
         api_service = APIService(config=self.config, logger=self.logger)
         core_service = CoreService(config=self.config, logger=self.logger)
-        ingestion_service = APIService(config=self.config, logger=self.logger)
+        ingestion_service = IngestionService(config=self.config, logger=self.logger)
 
-        core_service.start()
+        try:
+            api_service.start()
+        except Exception as exc:
+            self.logger.error(exc)
     
     def stop(self) -> None:
         '''
