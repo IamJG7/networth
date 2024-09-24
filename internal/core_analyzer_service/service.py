@@ -9,8 +9,6 @@ from internal.core_analyzer_service.forwarder import Forwarder
 from pkg.database import Database
 from pkg.logger import Logger
 
-CHANNEL = "ch1"
-
 class CoreService:
     '''
     CoreService
@@ -26,11 +24,12 @@ class CoreService:
         '''
         start method initiates the AnalyzerService
         '''
+        channel = self.config.get("database").get("channel_api_to_core")
 
         envrionment = self.config.get("webserver").get("environment").upper()
         self.logger.info(f"Starting the CoreService in {envrionment} environment")
         subscriber = self.database.pubsub()
-        subscriber.subscribe(CHANNEL)
+        subscriber.subscribe(channel)
 
         for message in subscriber.listen():
             if message.get("type") == "message":
@@ -40,4 +39,4 @@ class CoreService:
                 if data.get("request") == "fundamentals":
                     pass
             else:
-                time.sleep(5)
+                time.sleep(3)

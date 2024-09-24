@@ -25,8 +25,10 @@ class Application:
 
         try:
             api_service.start()
+            # core_service.start()
+            # ingestion_service.start()
         except Exception as exc:
-            self.logger.error(exc)
+            self.logger.error(f"Failed to start the application: {exc}")
     
     def stop(self) -> None:
         '''

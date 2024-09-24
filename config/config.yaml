@@ -49,6 +49,11 @@ database:
     db: 1
     encoding: 'utf-8'
     decode_response: true
+  transaction_db: 0
+  stats_db: 1
+  transaction_key_expiry: 604800  # 7 days
+  channel_api_to_core: channel1
+  channel_core_to_ingestion: channel2
 messaging:
   kafka:
     broker: "192.168.0.11"
@@ -61,3 +66,6 @@ messaging:
       offset_reset: latest  # latest, earliest, 
       min_commit_count: 3
       asynchronous_commit: false
+third_party:
+  polygon:
+    request_cooling_period: 65

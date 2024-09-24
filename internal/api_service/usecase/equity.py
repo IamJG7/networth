@@ -10,8 +10,6 @@ from pkg.logger import Logger
 
 SUCCESS = "success"
 FAILURE = "failure"
-CHANNEL = "ch1"
-TRANSACTION_DB = 0
 
 class Equity:
     '''
@@ -74,19 +72,22 @@ class Equity:
         '''
         update_statistics
         '''
+        channel = self.config.get("database").get("channel_api_to_core")
+        transaction_db = self.config.get("database").get("transaction_db")
+
         message = {}
         message["user_data"] = user_data
         message["transaction_id"] = str(uuid4())
         message["request"] = "statistics"
         try:
             self.logger.debug(f"Publising request to the ch1 with transaction ID: {message['transaction_id']}")
-            _ = self.database.publish(channel=CHANNEL, message=json.dumps(message))
-            self.database.select(index=TRANSACTION_DB)
+            _ = self.database.publish(channel=channel, message=json.dumps(message))
+            self.database.select(index=transaction_db)
             self.database.hset(name=message["transaction_id"], key="status", value="pending")
         except Exception as exc:
             raise Exception((10004, "Failed to update statistics")) from exc
-
-        return message["transaction_id"]
+        else:
+            return message["transaction_id"]
 
     def retrieve_statistics(self, user_data: json) -> json:
         '''

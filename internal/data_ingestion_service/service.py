@@ -9,8 +9,6 @@ from internal.data_ingestion_service.forwarder import Forwarder
 from pkg.database import Database
 from pkg.logger import Logger
 
-CHANNEL = "ch2"
-
 class IngestionService:
     '''
     IngestionService
@@ -26,16 +24,19 @@ class IngestionService:
         '''
         start method initiates the IngestionService
         '''
+        channel = self.config.get("database").get("channel_core_to_ingestion")
 
         envrionment = self.config.get("webserver").get("environment").upper()
         self.logger.info(f"Starting the IngestionService in {envrionment} environment")
         subscriber = self.database.pubsub()
-        subscriber.subscribe(CHANNEL)
+        subscriber.subscribe(channel)
 
         for message in subscriber.listen():
             if message.get("type") == "message":
                 data = json.loads(message.get("data"))
                 if data.get("request") == "ingestion":
-                    self.forwarder.add_statistics(date=data.get("date"), result=data.get("result"), transaction_id=data.get("transaction_id"))
+                    self.forwarder.add_statistics(date=data.get("date"),
+                                                  result=data.get("result"),
+                                                  transaction_id=data.get("transaction_id"))
             else:
                 time.sleep(5)
