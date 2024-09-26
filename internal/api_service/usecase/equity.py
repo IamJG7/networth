@@ -15,13 +15,12 @@ class Equity:
     '''
     Equity
     '''
-
     def __init__(self, config: Config, logger: Logger) -> None:
         self.config = config
         self.logger = logger
         self.database = Database(config=config.get("database").get("redis"), logger=self.logger).connect()
     
-    def create_watchlist(self, user_data: json) -> str:
+    def create_watchlist(self, user_data: dict) -> str:
         '''
         create_watchlist
         '''
@@ -52,7 +51,7 @@ class Equity:
 
             return SUCCESS
 
-    def retrieve_watchlist(self, user_data: json) -> json:
+    def retrieve_watchlist(self, user_data: dict) -> dict:
         '''
         retrieve_watchlist
         '''
@@ -80,33 +79,66 @@ class Equity:
         message["transaction_id"] = str(uuid4())
         message["request"] = "statistics"
         try:
-            self.logger.debug(f"Publising request to the ch1 with transaction ID: {message['transaction_id']}")
+            self.logger.debug(f"Publising request to the {channel}: {message}")
             _ = self.database.publish(channel=channel, message=json.dumps(message))
             self.database.select(index=transaction_db)
             self.database.hset(name=message["transaction_id"], key="status", value="pending")
         except Exception as exc:
+            self.logger.error(f"Failed to update statistics: {exc}")
             raise Exception((10004, "Failed to update statistics")) from exc
         else:
             return message["transaction_id"]
 
-    def retrieve_statistics(self, user_data: json) -> json:
+    def retrieve_statistics(self, user_data: dict) -> dict:
         '''
         retrieve_statistics
         '''
         ticker = user_data.get("ticker")
         date = user_data.get("date")
-        self.logger.debug(f"Retrieving statistical data for {ticker}")
+        stats_db = self.config.get("database").get("stats_db")
+
+        self.logger.debug(f"Retrieving statistical data for {user_data}")
         result = {}
         try:
-            if ticker is None:
+            self.database.select(index=stats_db)
+            if ticker == "watchlist":
                 watchlist_tickers = self.database.hkeys(name="watchlist")
                 for wticker in watchlist_tickers:
-                    stats = self.database.hget(name=wticker, key=date)
-                    result[wticker] = stats
+                    stats = self.database.hget(name=date, key=wticker)
+                    if stats is None:
+                        result[wticker] = {}
+                    else:
+                        result[wticker] = json.loads(stats)
             else:
-                stats = self.database.hget(name=ticker, key=date)
-                result[ticker] = stats
+                stats = self.database.hget(name=date, key=ticker)
+                if stats is None:
+                    result[ticker] = {}
+                else:
+                    result[ticker] = json.loads(stats)
         except Exception as exc:
-            raise Exception((10005, "Failed to retrieve statistics")) from exc
+            self.logger.error(f"Failed to retrieve statistics: {exc}")
+            raise Exception((10005, f"Failed to retrieve statistics")) from exc
+        else:
+            return result
 
-        return result
+    def notify(self, user_data: dict) -> None:
+        '''
+        notify
+        '''
+        channel = self.config.get("database").get("channel_api_to_core")
+        transaction_db = self.config.get("database").get("transaction_db")
+
+        message = {}
+        message["user_data"] = user_data
+        message["transaction_id"] = str(uuid4())
+        message["request"] = "notify"
+        try:
+            self.logger.debug(f"Publising request to the {channel}: {message}")
+            _ = self.database.publish(channel=channel, message=json.dumps(message))
+            self.database.select(index=transaction_db)
+            self.database.hset(name=message["transaction_id"], key="status", value="pending")
+        except Exception as exc:
+            self.logger.error(f"Failed to send notification: {exc}")
+            raise Exception((10007, f"Failed to send notification")) from exc
+        else:
+            return message["transaction_id"]

@@ -13,7 +13,7 @@ class Application:
         self.config = Config().get_global_config()
         self.logger = Logger(config=self.config.get('logging')).get_logger()
 
-    def start(self) -> None:
+    def start(self, cmd_input) -> None:
         '''
         start method initiates the respective services (APIService/CoreAnalyzer/DataIngestion)
         '''
@@ -24,9 +24,14 @@ class Application:
         ingestion_service = IngestionService(config=self.config, logger=self.logger)
 
         try:
-            api_service.start()
-            # core_service.start()
-            # ingestion_service.start()
+            if cmd_input.service == "api":
+                api_service.start()
+            if cmd_input.service == "core":
+                core_service.start()
+            if cmd_input.service == "ingest":
+                ingestion_service.start()
+            else:
+                raise Exception(f"Invalid service type: {cmd_input.service}")
         except Exception as exc:
             self.logger.error(f"Failed to start the application: {exc}")
     

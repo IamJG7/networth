@@ -38,5 +38,7 @@ class CoreService:
                     self.forwarder.add_statistics(user_data=data.get("user_data"), transaction_id=data.get("transaction_id"))
                 if data.get("request") == "fundamentals":
                     pass
+                if data.get("request") == "notify":
+                    self.forwarder.send_notification(user_data=data.get("user_data"), transaction_id=data.get("transaction_id"))
             else:
                 time.sleep(3)

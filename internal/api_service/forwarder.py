@@ -53,3 +53,10 @@ class Forwarder:
         '''
         status = self.equity.update_statistics(user_data=user_data)
         return status
+    
+    def notify(self, user_data: dict) -> str:
+        '''
+        notify
+        '''
+        status = self.equity.notify(user_data=user_data)
+        return status

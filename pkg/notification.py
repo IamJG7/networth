@@ -3,22 +3,28 @@ email module outlines methods for smtp notifications
 '''
 
 import os
-from smtplib import SMTP
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from smtplib import SMTP
 import ssl
-from src.config.config import Config
-from src.lib.logger.logger import logging
+from config.config import Config
+from pkg.logger import logging
 
 class Email:
+    '''
+    Email
+    '''
 
     def __init__(self, config: Config, logger: logging.Logger) -> None:
         self.config = config
         self.logger = logger
 
     def send(self, subject: str, body: str, attachment: object=None) -> None:
+        '''
+        send
+        '''
         sender = self.config.get("sender")
         recipients = self.config.get("recipients")
         server = SMTP

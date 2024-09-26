@@ -61,6 +61,24 @@ def statistics():
         logger.error(f"Failed to perform {request.method} operation for {statistics.__name__}: {err}")
         abort(500, description=err.args[0])
 
+@operation_blueprint.route("notify", methods=["POST"])
+def notify():
+    '''
+    notify
+    '''
+    try:
+        if request.method.upper() == "POST":
+            user_data = request.get_json(force=True)
+            status = forwarder.notify(user_data=user_data.get("user_data"))
+            return make_response(jsonify({'status_code': 200, 'status': status,
+                                      'data': None,
+                                      'isShowToaster': True, 'message': 'Email sent successfuly'}), 200)
+        else:
+            abort(405)
+    except Exception as err:
+        logger.error(f"Failed to perform {request.method} operation for {notify.__name__}: {err}")
+        abort(500, description=err.args[0])
+
 @operation_blueprint.route("dashboard/networth", methods=["GET"])
 def dashboard():
     '''

@@ -35,7 +35,7 @@ class EquityScanner:
         date = user_data.get("date")
         channel = self.config.get("database").get("channel_core_to_ingestion")
         transaction_db = self.config.get("database").get("transaction_db")
-        stats_db = self.config.get("database").get("stats_db")
+        _ = self.config.get("database").get("stats_db")
         cooling_period = self.config.get("third_party").get("polygon").get("request_cooling_period")
         transaction_expiry = self.config.get("database").get("transaction_key_expiry")
 
