@@ -40,8 +40,7 @@ class EquityScanner:
         transaction_expiry = self.config.get("database").get("transaction_key_expiry")
 
         if tickers[0].lower() == "watchlist":
-            watchlist = self.database.hkeys(name="watchlist")
-            tickers = watchlist
+            tickers = self.database.hkeys(name="watchlist")
         
         self.database.select(index=transaction_db)
         self.database.hset(name=tx_id, key="status", value="in_progress")

@@ -53,7 +53,15 @@ class Forwarder:
         '''
         status = self.equity.update_statistics(user_data=user_data)
         return status
-    
+
+    def analyze(self, user_data: dict) -> str:
+        '''
+        analyze
+        '''
+        status = self.equity.analyze(user_data=user_data)
+        return status
+
+
     def notify(self, user_data: dict) -> str:
         '''
         notify

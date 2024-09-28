@@ -3,6 +3,7 @@ forwarder
 '''
 
 from config.config import Config
+from internal.core_analyzer_service.usecase.analyzer import SecurityAnalyzer
 from internal.core_analyzer_service.usecase.notify import Notify
 from internal.core_analyzer_service.usecase.scanner import EquityScanner
 from pkg.logger import logging
@@ -15,6 +16,7 @@ class Forwarder:
         self.config = config
         self.logger = logger
         self.scanner = EquityScanner(config=config, logger=logger)
+        self.analyzer = SecurityAnalyzer(config=config, logger=logger)
         self.notify = Notify(config=config, logger=logger)
 
     def add_statistics(self, user_data: dict, transaction_id: str) -> None:
@@ -26,6 +28,16 @@ class Forwarder:
         except Exception as exc:
             self.logger.error(f"Failed to add statistical data for transactionID: {transaction_id}: {exc}")
     
+    def analyze(self, user_data: dict, transaction_id: str) -> None:
+        '''
+        analyze
+        '''
+        try:
+            _ = self.analyzer.analyze(user_data=user_data, tx_id=transaction_id)
+        except Exception as exc:
+            self.logger.error(f"Failed to analyze data for transactionID: {transaction_id}: {exc}")
+
+
     def send_notification(self, user_data: dict, transaction_id: str) -> None:
         '''
         notify

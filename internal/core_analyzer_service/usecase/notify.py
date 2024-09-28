@@ -3,6 +3,7 @@ notify
 '''
 
 import json
+from prettytable import PrettyTable
 from config.config import Config
 from pkg.database import Database
 from pkg.logger import logging
@@ -24,105 +25,47 @@ class Notify:
         '''
         tickers = user_data.get("tickers")
         date = user_data.get("date")
+        content = user_data.get("content")
         transaction_db = self.config.get("database").get("transaction_db")
         stats_db = self.config.get("database").get("stats_db")
         transaction_expiry = self.config.get("database").get("transaction_key_expiry")
 
-        stats = self.__retrieve_statistics(user_data=user_data)
-        tech_analysis = self.__perform_technical_analysis(statistics=stats)
+        data = self.__get_raw_data(tickers=tickers, date=date)
+        email_content = self.__convert_data_to_table(result=data)
+        print(email_content)
 
-    def __retrieve_statistics(self, user_data: dict) -> dict:
-        '''
-        retrieve_statistics
-        '''
-        tickers = user_data.get("tickers")
-        date = user_data.get("date")
-        stats_db = self.config.get("database").get("stats_db")
 
-        self.logger.debug(f"Retrieving statistical data for {user_data}")
+    def __get_raw_data(self, tickers: list, date: str) -> dict:
         result = {}
         try:
-            self.database.select(index=stats_db)
-            if tickers[0] == "watchlist":
-                watchlist_tickers = self.database.hkeys(name="watchlist")
-                for wticker in watchlist_tickers:
-                    stats = self.database.hget(name=date, key=wticker)
-                    if stats is None:
-                        result[wticker] = {}
-                    else:
-                        result[wticker] = json.loads(stats)
-            else:
-                for ticker in tickers:
-                    stats = self.database.hget(name=date, key=ticker)
-                    if stats is None:
-                        result[ticker] = {}
-                    else:
-                        result[ticker] = json.loads(stats)
+            if tickers[0].lower() == "watchlist":
+                tickers = self.database.hkeys(name="watchlist")
+            for ticker in tickers:
+                result[ticker] = {}
+                stats = self.database.hget(name=date, key=ticker)
+                if stats is None:
+                    result[ticker]["statistics"] = {}
+                else:
+                    result[ticker]["statistics"] = json.loads(stats)
+
+                analysis = self.database.hget(name="analysis", key=ticker)
+                if analysis is None:
+                    result[ticker]["analysis"] = {}
+                else:
+                    result[ticker]["analysis"] = json.loads(analysis)
         except Exception as exc:
-            self.logger.error(f"Failed to retrieve statistics: {exc}")
-            raise Exception((10005, f"Failed to retrieve statistics")) from exc
+            self.logger.error(f"Failed to retrieve analysis: {exc}")
+            raise Exception((20001, f"Failed to retrieve analysis")) from exc
         else:
             return result
-    
-    def __perform_technical_analysis(self, statistics: dict) -> dict:
-        result = {}
-        for ticker, statstic in statistics.items():
-            result[ticker] = {}
-            if statstic.get("rsi") < 30:
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):
-                    result[ticker]["signal"] = "MustBuy"
-                    result[ticker]["position"] = "ForLongRun"
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):
-                    result[ticker]["signal"] = "Buy"
-                    result[ticker]["position"] = "ForLongRun"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
 
-            if 30 < statstic.get("rsi") < 50:
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):
-                    result[ticker]["signal"] = "WatchForTrend"
-                    result[ticker]["position"] = "ForShortRun"
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):
-                    result[ticker]["signal"] = "WatchForTrend"
-                    result[ticker]["position"] = "ForShortRun"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):
-                    result[ticker]["signal"] = "WaitToFallMore"
-                    result[ticker]["position"] = "Hold"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "CanBuy"
-                    result[ticker]["position"] = "ForLongRun"
+    def __convert_data_to_table(self, result: dict) -> PrettyTable:
 
-            if 50 < statstic.get("rsi") < 70:
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):
-                    result[ticker]["signal"] = "WatchForTrend"
-                    result[ticker]["position"] = "Hold"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):
-                    result[ticker]["signal"] = "WatchForTrend"
-                    result[ticker]["position"] = "Hold"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):
-                    result[ticker]["signal"] = "WatchForTrend"
-                    result[ticker]["position"] = "Hold"
+        column_fields = ["Ticker", "Open", "Close", "RSI", "SMA50", "SMA200", "Signal", "Position"]
+        row_fields = []
+        '''
+        {'MSFT': {'statistics': {'open': 437.22, 'close': 435.27, 'high': 439.24, 'low': 434.22, 'volume': 49826691.0, 'after_hours': 436.03, 'pre_market': 438.14, 'rsi': 60.58, 'sma50': 421.65, 'sma200': 413.91, 'ema20': 423.69}, 'analysis': {'date': '2024-09-20', 'technical_analysis': {'signal': 'WatchForTrend', 'position': 'Hold'}, 'fundamental_analysis': {}}}, 'AVGO': {'statistics': {'open': 167.18, 'close': 171.1, 'high': 172.02, 'low': 166.47, 'volume': 77338658.0, 'after_hours': 170.84, 'pre_market': 167.44, 'rsi': 59.46, 'sma50': 156.95, 'sma200': 137.63, 'ema20': 160.03}, 'analysis': {'date': '2024-09-20', 'technical_analysis': {'signal': 'WatchForTrend', 'position': 'Hold'}, 'fundamental_analysis': {}}}}
+        '''
 
-            if statstic.get("rsi") > 70:
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
-                if statstic.get("close") < statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") < statstic.get("sma200"):    # Rare to find
-                    result[ticker]["signal"] = "Wait"
-                    result[ticker]["position"] = "Undetermined"
-                if statstic.get("close") > statstic.get("sma50") and statstic.get("close") > statstic.get("sma200"):
-                    result[ticker]["signal"] = "StartToSell"
-                    result[ticker]["position"] = "Undetermined"
-        return result
-
-# TODO: Write an API for analysis
+        # for ticker, stats in result.items():
+        return {}

@@ -55,10 +55,28 @@ def statistics():
                                             'status': SUCCESS,
                                             'data': result,
                                             'isShowToaster': True,
-                                            'message': 'Successfully created a transactionID'}), 201)
+                                            'message': 'Please check the transactionID'}), 201)
         abort(405)
     except Exception as err:
         logger.error(f"Failed to perform {request.method} operation for {statistics.__name__}: {err}")
+        abort(500, description=err.args[0])
+
+@operation_blueprint.route("analyze", methods=["POST"])
+def analyze():
+    '''
+    analyze
+    '''
+    try:
+        if request.method.upper() == "POST":
+            user_data = request.get_json(force=True)
+            status = forwarder.analyze(user_data=user_data.get("user_data"))
+            return make_response(jsonify({'status_code': 200, 'status': status,
+                                      'data': None,
+                                      'isShowToaster': True, 'message': 'Please check the transactionID'}), 200)
+        else:
+            abort(405)
+    except Exception as err:
+        logger.error(f"Failed to perform {request.method} operation for {analyze.__name__}: {err}")
         abort(500, description=err.args[0])
 
 @operation_blueprint.route("notify", methods=["POST"])
@@ -72,7 +90,7 @@ def notify():
             status = forwarder.notify(user_data=user_data.get("user_data"))
             return make_response(jsonify({'status_code': 200, 'status': status,
                                       'data': None,
-                                      'isShowToaster': True, 'message': 'Email sent successfuly'}), 200)
+                                      'isShowToaster': True, 'message': 'Please check the transactionID'}), 200)
         else:
             abort(405)
     except Exception as err:

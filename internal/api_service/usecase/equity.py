@@ -121,6 +121,28 @@ class Equity:
         else:
             return result
 
+    def analyze(self, user_data: dict) -> None:
+        '''
+        analyze
+        '''
+        channel = self.config.get("database").get("channel_api_to_core")
+        transaction_db = self.config.get("database").get("transaction_db")
+
+        message = {}
+        message["user_data"] = user_data
+        message["transaction_id"] = str(uuid4())
+        message["request"] = "analyze"
+        try:
+            self.logger.debug(f"Publising request to the {channel}: {message}")
+            _ = self.database.publish(channel=channel, message=json.dumps(message))
+            self.database.select(index=transaction_db)
+            self.database.hset(name=message["transaction_id"], key="status", value="pending")
+        except Exception as exc:
+            self.logger.error(f"Failed to analyze shares: {exc}")
+            raise Exception((10006, f"Failed to analyze shares")) from exc
+        else:
+            return message["transaction_id"]
+
     def notify(self, user_data: dict) -> None:
         '''
         notify
