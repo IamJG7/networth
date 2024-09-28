@@ -3,11 +3,16 @@ notify
 '''
 
 import json
+import os
 from prettytable import PrettyTable
 from config.config import Config
 from pkg.database import Database
 from pkg.logger import logging
 from pkg.notification import Email
+
+SUCCESS = "success"
+APP_DIRECTORY=os.getenv("APP_DIRECTORY")
+RESULT_DIRECTORY=os.path.join(APP_DIRECTORY, "artifacts", "result")
 
 class Notify:
     '''
@@ -25,15 +30,38 @@ class Notify:
         '''
         tickers = user_data.get("tickers")
         date = user_data.get("date")
-        content = user_data.get("content")
+        recipients = user_data.get("recipients")
         transaction_db = self.config.get("database").get("transaction_db")
         stats_db = self.config.get("database").get("stats_db")
         transaction_expiry = self.config.get("database").get("transaction_key_expiry")
 
         data = self.__get_raw_data(tickers=tickers, date=date)
-        email_content = self.__convert_data_to_table(result=data)
-        print(email_content)
+        tabular_data = self.__convert_data_to_table(result=data)
+        
+        self.logger.info(f"Sending email for transactionID: {tx_id}")
 
+        html_data = tabular_data.get_html_string()
+
+        email_subject = f"Stock Analysis | {date}"
+        email_body = f"""
+        <html><body><p>Hello Investor!</p>
+        <p>Thank you for using our beta StockAnalyzer.</p>
+        {html_data}
+        <p>*Note: These results are probabilistic and do not guarantee any profit. Please invest at your own risk.</p>
+        <p></p>
+        JGLab Automation
+        </body></html>
+        """
+        try:
+            self.email.send(subject=email_subject, body=email_body, recipients=recipients)
+        except Exception as exc:
+            self.logger.error(exc)
+            self.database.hset(name=tx_id, key="status", value=str(exc))
+            raise Exception(f"Failed to send email: {exc}") from exc
+        else:
+            self.database.select(index=transaction_db)
+            self.database.hset(name=tx_id, key="staus", value=SUCCESS)
+            self.database.expire(name=tx_id, time=transaction_expiry)
 
     def __get_raw_data(self, tickers: list, date: str) -> dict:
         result = {}
@@ -44,7 +72,7 @@ class Notify:
                 result[ticker] = {}
                 stats = self.database.hget(name=date, key=ticker)
                 if stats is None:
-                    result[ticker]["statistics"] = {}
+                    continue
                 else:
                     result[ticker]["statistics"] = json.loads(stats)
 
@@ -60,12 +88,26 @@ class Notify:
             return result
 
     def __convert_data_to_table(self, result: dict) -> PrettyTable:
+        try:
+            column_fields = ["Ticker", "Open", "Close", "RSI", "SMA50", "SMA200", "Signal", "Position"]
+            row_fields = []
 
-        column_fields = ["Ticker", "Open", "Close", "RSI", "SMA50", "SMA200", "Signal", "Position"]
-        row_fields = []
-        '''
-        {'MSFT': {'statistics': {'open': 437.22, 'close': 435.27, 'high': 439.24, 'low': 434.22, 'volume': 49826691.0, 'after_hours': 436.03, 'pre_market': 438.14, 'rsi': 60.58, 'sma50': 421.65, 'sma200': 413.91, 'ema20': 423.69}, 'analysis': {'date': '2024-09-20', 'technical_analysis': {'signal': 'WatchForTrend', 'position': 'Hold'}, 'fundamental_analysis': {}}}, 'AVGO': {'statistics': {'open': 167.18, 'close': 171.1, 'high': 172.02, 'low': 166.47, 'volume': 77338658.0, 'after_hours': 170.84, 'pre_market': 167.44, 'rsi': 59.46, 'sma50': 156.95, 'sma200': 137.63, 'ema20': 160.03}, 'analysis': {'date': '2024-09-20', 'technical_analysis': {'signal': 'WatchForTrend', 'position': 'Hold'}, 'fundamental_analysis': {}}}}
-        '''
+            for ticker, stats in result.items():
+                if stats.get("statistics") is None:
+                    continue
+                open_price = stats.get("statistics").get("open")
+                close_price = stats.get("statistics").get("close")
+                rsi = stats.get("statistics").get("rsi")
+                sma50 = stats.get("statistics").get("sma50")
+                sma200 = stats.get("statistics").get("sma200")
+                signal = stats.get("analysis").get("technical_analysis").get("signal")
+                position = stats.get("analysis").get("technical_analysis").get("position")
+                row = [ticker, open_price, close_price, rsi, sma50, sma200, signal, position]
+                row_fields.append(row)
 
-        # for ticker, stats in result.items():
-        return {}
+            tablular_result = PrettyTable(field_names=column_fields)
+            tablular_result.add_rows(rows=row_fields)
+        except Exception as exc:
+            self.logger.error(f"Failed to convert statistical and analytical data to table: {exc}")
+        else:
+            return tablular_result

@@ -6,6 +6,7 @@ from flask import json
 
 from config.config import Config
 from internal.api_service.usecase.equity import Equity
+from internal.api_service.usecase.transactions import Transactions
 from pkg.logger import logging
 from pkg.tools import password
 
@@ -17,6 +18,7 @@ class Forwarder:
         self.config = config
         self.logger = logger
         self.equity = Equity(config=config, logger=logger)
+        self.transaction = Transactions(config=config, logger=logger)
 
     def generate_password(self, user_data: json) -> str:
         '''
@@ -61,10 +63,16 @@ class Forwarder:
         status = self.equity.analyze(user_data=user_data)
         return status
 
-
     def notify(self, user_data: dict) -> str:
         '''
         notify
         '''
         status = self.equity.notify(user_data=user_data)
+        return status
+
+    def get_transaction(self, transaction_id: str) -> dict:
+        '''
+        get_transaction
+        '''
+        status = self.transaction.get_transaction(transaction_id=transaction_id)
         return status

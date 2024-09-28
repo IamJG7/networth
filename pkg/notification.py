@@ -21,12 +21,13 @@ class Email:
         self.config = config
         self.logger = logger
 
-    def send(self, subject: str, body: str, attachment: object=None) -> None:
+    def send(self, subject: str, body: str, attachment: object = None, recipients: list = None) -> None:
         '''
         send
         '''
         sender = self.config.get("sender")
-        recipients = self.config.get("recipients")
+        if recipients is None:
+            recipients = self.config.get("recipients")
         server = SMTP
         try:
             server = self.__configure_smtp()
@@ -34,6 +35,7 @@ class Email:
 
             server.login(os.getenv("SMTP_USERNAME"), os.getenv("SMTP_PASSWORD"))
             server.sendmail(from_addr=sender, to_addrs=recipients, msg=message.as_string())
+            self.logger.info(f"Email successfully sent to the recipients: {recipients}")
         except Exception as err:
             self.logger.error(err)
             raise Exception(f"Failed to send an email: {err}")

@@ -77,6 +77,9 @@ class SecurityAnalyzer:
                     if statistics.get("close") > statistics.get("sma50") and statistics.get("close") > statistics.get("sma200"):
                         result[ticker]["technical_analysis"] = {"signal": "StartToSell", "position": "Undetermined"}
 
+                if statistics is None:
+                    result[ticker]["technical_analysis"] = {}
+
                 # fundamentals = self.database.hget(name="fundamental", key=ticker)
                 result[ticker]["fundamental_analysis"] = {}
 
