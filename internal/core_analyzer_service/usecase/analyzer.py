@@ -35,7 +35,10 @@ class SecurityAnalyzer:
                 result[ticker] = {}
                 result[ticker]["date"] = date
 
-                statistics = json.loads(self.database.hget(name=date, key=ticker))
+                data = self.database.hget(name=date, key=ticker)
+                if data is None:
+                    continue
+                statistics = json.loads(data)
                 result[ticker]["technical_analysis"] = {}
                 if statistics.get("rsi") < 30:
                     if statistics.get("close") < statistics.get("sma50") and statistics.get("close") < statistics.get("sma200"):
@@ -88,6 +91,6 @@ class SecurityAnalyzer:
             self.logger.error(f"Failed to analyze {user_data}: {exc}")
         else:
             self.database.select(index=transaction_db)
-            self.database.hset(name=tx_id, key="staus", value=SUCCESS)
+            self.database.hset(name=tx_id, key="status", value=SUCCESS)
             self.database.expire(name=tx_id, time=transaction_expiry)
             return result

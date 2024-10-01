@@ -60,7 +60,7 @@ class Notify:
             raise Exception(f"Failed to send email: {exc}") from exc
         else:
             self.database.select(index=transaction_db)
-            self.database.hset(name=tx_id, key="staus", value=SUCCESS)
+            self.database.hset(name=tx_id, key="status", value=SUCCESS)
             self.database.expire(name=tx_id, time=transaction_expiry)
 
     def __get_raw_data(self, tickers: list, date: str) -> dict:

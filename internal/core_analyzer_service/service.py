@@ -3,6 +3,7 @@ flask module is the main module to kickstart the application webserver
 '''
 
 import json
+from threading import Thread
 import time
 from config.config import Config
 from internal.core_analyzer_service.forwarder import Forwarder
@@ -35,7 +36,10 @@ class CoreService:
             if message.get("type") == "message":
                 data = json.loads(message.get("data"))
                 if data.get("request") == "statistics":
-                    self.forwarder.add_statistics(user_data=data.get("user_data"), transaction_id=data.get("transaction_id"))
+                    thread = Thread(target=self.forwarder.add_statistics, args=(data.get("user_data"), data.get("transaction_id"), ), name="AddStats", daemon=True)
+                    thread.start()
+                    # thread.join()
+                    # self.forwarder.add_statistics(user_data=data.get("user_data"), transaction_id=data.get("transaction_id"))
                 if data.get("request") == "fundamentals":
                     pass
                 if data.get("request") == "analyze":

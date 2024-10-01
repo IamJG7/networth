@@ -7,10 +7,6 @@ import os
 import pathlib
 from config.config import Config
 
-APP_NAME = os.getenv("APP_NAME")
-SERVICE_NAME=os.getenv("SERVICE_NAME")
-LOGGER_NAME= f"{APP_NAME}-{SERVICE_NAME}"
-LOG_FILE_NAME = f"{LOGGER_NAME}.log"
 LOG_FILE_LOCATION = os.path.join("artifacts", "logs")
 
 class Logger:
@@ -18,15 +14,22 @@ class Logger:
     Logger
     '''
 
-    def __init__(self, config: Config, name: str=LOGGER_NAME) -> None:
-        self.config = config
-        self.name = name
+    application_name = os.getenv("APP_NAME")
+    service_name=os.getenv("SERVICE_NAME")
+    logger_name= f"{application_name}-{service_name}"
+    log_file_name = f"{logger_name}.log"
 
-    def get_logger(self) -> logging.LoggerAdapter:
+    def __init__(self, config: Config) -> None:
+        self.config = config
+
+    def get_logger(self, name: str = None) -> logging.LoggerAdapter:
         '''
         get_logger
         '''
-        logger = logging.getLogger(name=self.name)
+        if name is None:
+            logger = logging.getLogger(name=self.logger_name)
+        else:
+            logger = logging.getLogger(name=name)
         self.__set_level(logger=logger)
         self.__set_handler(logger=logger)
         return logger

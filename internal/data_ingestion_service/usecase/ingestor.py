@@ -37,10 +37,10 @@ class EquityIngestor:
                 self.database.hset(name=date, key=ticker, value=json.dumps(result))
         except Exception as exc:
             self.database.select(index=transaction_db)
-            self.database.hset(name=tx_id, key="staus", value=FAILURE)
+            self.database.hset(name=tx_id, key="status", value=FAILURE)
             raise Exception(f"Failed to update database request for {tx_id}: {exc}") from exc
         else:
             self.database.select(index=transaction_db)
-            self.database.hset(name=tx_id, key="staus", value=SUCCESS)
+            self.database.hset(name=tx_id, key="status", value=SUCCESS)
             self.database.expire(name=tx_id, time=transaction_expiry)
             self.logger.info(f"Successfully updated database for transactionID: {tx_id} with statistics: {statistics}")

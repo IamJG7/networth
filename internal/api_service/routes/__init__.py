@@ -7,7 +7,7 @@ LOGGER_NAME = "WebServer"
 
 try:
     config = Config().get_global_config()
-    logger = Logger(config=config.get('logging'), name=LOGGER_NAME).get_logger()
+    logger = Logger(config=config.get('logging')).get_logger(name=LOGGER_NAME)
 
     forwarder = Forwarder(config=config, logger=logger)
 except Exception as exc:
